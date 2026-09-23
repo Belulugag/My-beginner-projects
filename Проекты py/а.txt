@@ -1,0 +1,16 @@
+from tkinter import *
+tk = Tk()
+tk.geometry("500x500")
+cs = Canvas(tk,width = 500,height = 500,bg = "black")
+cs.pack()
+cs.create_line(50,120,250,120,fill = "white")
+cs.create_line(50,180,250,180,fill = "white")
+cs.create_line(120,50,120,250,fill = "white")
+cs.create_line(180,50,180,250,fill = "white")
+a = [1,2,3,4,5,6,7,8,9]
+c = 0
+start = True
+def draw_f(posx,posy,pos):
+    global c,a
+    if
+Допиши функцию

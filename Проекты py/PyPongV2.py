@@ -1,0 +1,133 @@
+from tkinter import *
+import random
+
+tk = Tk()
+tk.title("PyPong")
+
+WIDTH = 900
+HEIGHT = 300
+PAD_W = 10
+PAD_H = 100
+BRADIUS = 25
+SPEEDY = 0
+SPEEDX = 10
+SPEED_MULTIPLY = 1.00
+MAX_SPEED = 100
+right_line_distance = WIDTH - PAD_W
+P1 = 0
+P2 = 0
+INSPEED = 15
+
+#main window
+cs = Canvas(tk, width=WIDTH, height=HEIGHT, bg="black")
+cs.pack()
+#decoration
+cs.create_line(PAD_W, 0, PAD_W, HEIGHT, fill="white") #left line
+cs.create_line(WIDTH - PAD_W, 0, WIDTH - PAD_W, HEIGHT, fill="white") #right line 
+cs.create_line(WIDTH / 2, 0, WIDTH / 2, HEIGHT, fill="white") #grid
+#ball and paddes
+BALL = cs.create_oval(WIDTH / 2 - BRADIUS / 2,
+                     HEIGHT / 2 - BRADIUS / 2,
+                     WIDTH / 2 + BRADIUS / 2,
+                     HEIGHT / 2 + BRADIUS / 2, fill="white")
+LEFT = cs.create_line(PAD_W, 0, PAD_W, PAD_H, width=PAD_W, fill="white")
+RIGHT = cs.create_line(WIDTH - PAD_W, 0, WIDTH - PAD_W, PAD_H, width=PAD_W, fill="white")
+#score
+def upd_score(P):
+    global P1,P2
+    if P == "right":
+        P1 += 1
+        cs.itemconfig(p1txt,text = P1)
+    else:
+        cs.itemconfig(p2txt,text = P2)
+
+p1txt = cs.create_text(WIDTH-WIDTH/6,PAD_H/4,
+                       text = P1,font = "Arial 24",
+                       fill = "White")
+p2txt = cs.create_text(WIDTH-WIDTH/1.2,PAD_H/4,
+                       text = P1,font = "Arial 24",
+                       fill = "White")
+
+def respawn():
+    global SPEEDX
+    cs.coords(WIDTH / 2 - BRADIUS / 2,
+              HEIGHT / 2 - BRADIUS / 2,
+              WIDTH / 2 + BRADIUS / 2,
+              HEIGHT / 2 + BRADIUS / 2)
+    SPEEDX = -(SPEEDX*-INSPEED)/abs(SPEEDX)
+#speed of paddes
+PSPEED = 10
+LEFT_PSPEED = 0
+RIGHT_PSPEED = 0
+#collision
+def collision(action):
+    global SPEEDX,SPEEDY
+    if action == "strike":
+        SPEEDY = random.randrange(-10,10)
+        if abs(SPEEDX)<MAX_SPEED:
+            SPEEDX = SPEEDX * SPEEDX/6
+    else:
+        SPEEDY =-SPEEDX
+#gravitaion/move
+def gravimove():
+    ball_left,ball_top,ball_right,ball_bottom = cs.coords(BALL)
+    ball_center = (ball_top+ball_bottom)/2
+    #отскок
+    if ball_right+SPEEDX<right_line_distance and ball_left + SPEEDX > PAD_W:
+        cs.move(BALL,SPEEDX,SPEEDY)
+    elif ball_right == right_line_distance or ball_left == PAD_W:
+        if ball_right>WIDTH//2:
+            if cs.coords(RIGHT)[1]< ball_center<cs.coords(RIGHT)[3]:
+                collision("strike")
+            else:
+                upd_score("left")
+                respawn()
+        else:
+            if cs.coords(LEFT)[1]<ball_center<c.coords(LEFT)[3]:
+                collision("strike")
+            else:
+                upd_score("right")
+                respawn()
+    else:
+        if ball_right>WIDTH/2:
+            cs.move(BALL,right_line_distance-ball_right,SPEEDY)
+        else:
+            cs.move(BALL,-ball_left+PAD_W,SPEEDY)
+    if ball_top+SPEEDY<0 or ball_bottom+SPEEDY>HEIGHT:
+        bounce("ricochet")
+            
+def move_pads():
+    PADS = {LEFT:LEFT_PSPEED,RIGHT:RIGHT_PSPEED}
+    for p in PADS:
+        cs.move(p,0,PADS[p])
+        if cs.coords(p)[1]<0:
+            cs.move(p,0,-cs.coords(p)[1])
+        elif cs.coords(p)[3]>HEIGHT:
+            cs.move(p,0,HEIGHT - cs.coords(p)[3])
+def main():
+    gravimove()
+    move_pads()
+    tk.after(30,main)
+cs.focus_set()
+#clicks
+def contrmove(event):
+    global LEFT_PSPEED,RIGHT_PSPEED
+    if event.keysym == "w":
+        LEFT_PSPEED =- PSPEED
+    elif event.keysym == "s":
+        LEFT_PSPEED = PSPEED
+    elif event.keysym == "Up":
+        RIGHT_PSPEED =- PSPEED
+    elif event.keysym == "Down":
+        RIGHT_PSPEED = PSPEED
+cs.bind("<KeyPress>",contrmove) #bind
+def stop_pad(event):
+    global LEFT_PSPEED,RIGHT_PSPEED
+    if event.keysym in "ws":
+        LEFT_PSPEED = 0
+    if event.keysym in ("Up","Down"):
+        RIGHT_PSPEED = 0
+cs.bind("<KeyRelease>",stop_pad) #bind
+#launch
+main()
+tk.mainloop()
